@@ -1,0 +1,590 @@
+{include="header"}
+
+{if="$fsc->s_regiva"}
+<div class="container-fluid">
+   <div class="row hidden-print">
+      <div class="col-sm-6">
+         <div class="btn-group">
+            <a class="btn btn-sm btn-default" href="{$fsc->url()}">
+               <span class="glyphicon glyphicon-arrow-left"></span>
+               <span class="hidden-xs">&nbsp; Todo</span>
+            </a>
+            <a class="btn btn-sm btn-default" href="{$fsc->s_regiva->url()}" title="Recargar la página">
+               <span class="glyphicon glyphicon-refresh"></span>
+            </a>
+         </div>
+         <div class="btn-group">
+         {loop="$fsc->extensions"}
+            {if="$value->type=='button'"}
+            <a href="index.php?page={$value->from}&id={$fsc->s_regiva->idregiva}{$value->params}" class="btn btn-sm btn-default">{$value->text}</a>
+            {/if}
+         {/loop}
+         </div>
+         <a class="btn btn-sm btn-default" onclick="window.print();">
+            <span class="glyphicon glyphicon-print" aria-hidden="true"></span>
+            <span class="hidden-xs">&nbsp; Imprimir</span>
+         </a>
+      </div>
+      <div class="col-sm-6 text-right">
+         {if="$fsc->allow_delete"}
+         <a class="btn btn-sm btn-danger" href="{$fsc->url()}&delete={$fsc->s_regiva->idregiva}">
+            <span class="glyphicon glyphicon-trash"></span>
+            <span class="hidden-xs">&nbsp; Eliminar</span>
+         </a>
+         {/if}
+      </div>
+   </div>
+   <div class="row">
+      <div class="col-sm-12">
+         <div class="page-header">
+            <h1>
+               <span class="glyphicon glyphicon-book"></span>
+               Modelo 303
+               <small>{$fsc->s_regiva->periodo}@{$fsc->s_regiva->codejercicio}</small>
+            </h1>
+            <p class="help-block">
+               Regularización de iva de {$fsc->s_regiva->fechainicio} a {$fsc->s_regiva->fechafin}
+            </p>
+         </div>
+         <div class="table-responsive hidden-print">
+            <table class="table table-hover">
+               <thead>
+                  <tr>
+                     <th class="text-left">Ejercicio</th>
+                     <th class="text-left">Periodo</th>
+                     <th class="text-center">Fecha de inicio</th>
+                     <th class="text-center">Fecha fin</th>
+                     <th class="text-right">Asiento (fecha)</th>
+                  </tr>
+               </thead>
+               <tr>
+                  <td class="text-left"><a href="{$fsc->s_regiva->ejercicio_url()}">{$fsc->s_regiva->codejercicio}</a></td>
+                  <td class="text-left">{$fsc->s_regiva->periodo}</td>
+                  <td class="text-center">{$fsc->s_regiva->fechainicio}</td>
+                  <td class="text-center">{$fsc->s_regiva->fechafin}</td>
+                  <td class="text-right">
+                     <a target="_blank" href="{$fsc->s_regiva->asiento_url()}">Asiento</a>
+                     ({$fsc->s_regiva->fechaasiento})
+                  </td>
+               </tr>
+            </table>
+         </div>
+      </div>
+   </div>
+   <div class="row">
+      <div class="col-sm-8">
+         <ul class="nav nav-tabs hidden-print" role="tablist">
+            <li role="presentation" class="active">
+               <a href="#resumen" aria-controls="resumen" role="tab" data-toggle="tab">
+                  <i class="fa fa-print"></i>&nbsp; Resumen
+               </a>
+            </li>
+            <li role="presentation">
+               <a href="#compras" aria-controls="compras" role="tab" data-toggle="tab">
+                  <i class="fa fa-ship"></i>&nbsp; Compras
+               </a>
+            </li>
+            <li role="presentation">
+               <a href="#ventas" aria-controls="ventas" role="tab" data-toggle="tab">
+                  <i class="fa fa-shopping-cart"></i>&nbsp; Ventas
+               </a>
+            </li>
+         </ul>
+         <div class="tab-content">
+            <div role="tabpanel" class="tab-pane active" id="resumen">
+               <!-- {$devengado=0} -->
+               <!-- {$deducible=0} -->
+               <!-- {$total=0} -->
+               <h3>{#FS_IVA#} devengado</h3>
+               <div class="table-responsive">
+                  <table class="table table-hover">
+                     <thead>
+                        <tr>
+                           <th class="text-right">Base imponible</th>
+                           <th class="text-right">Tipo</th>
+                           <th class="text-right">Cuota</th>
+                        </tr>
+                     </thead>
+                     {loop="$fsc->desglosar_iva_ventas()"}
+                     <tr>
+                        <td class="text-right">{$fsc->show_precio($value['neto'])}</td>
+                        <td class="text-right">{$fsc->show_numero($value['iva'])} %</td>
+                        <td class="text-right">
+                           <!-- {$devengado=$devengado+$value['totaliva']+$value['totalrecargo']} -->
+                           {$fsc->show_precio($value['totaliva']+$value['totalrecargo'])}
+                        </td>
+                     </tr>
+                     {/loop}
+                     <tr class="info">
+                        <td colspan="3" class="text-right">
+                           <b>{$fsc->show_precio($devengado)}</b>
+                        </td>
+                     </tr>
+                  </table>
+               </div>
+               <h3>{#FS_IVA#} deducible</h3>
+               <div class="table-responsive">
+                  <table class="table table-hover">
+                     <thead>
+                        <tr>
+                           <th class="text-right">Base imponible</th>
+                           <th class="text-right">Tipo</th>
+                           <th class="text-right">Cuota</th>
+                        </tr>
+                     </thead>
+                     {loop="$fsc->desglosar_iva_compras()"}
+                     <tr>
+                        <td class="text-right">{$fsc->show_precio($value['neto'])}</td>
+                        <td class="text-right">{$fsc->show_numero($value['iva'])} %</td>
+                        <td class="text-right">
+                           <!-- {$deducible=$deducible+$value['totaliva']+$value['totalrecargo']} -->
+                           {$fsc->show_precio($value['totaliva']+$value['totalrecargo'])}
+                        </td>
+                     </tr>
+                     {/loop}
+                     <tr class="info">
+                        <td colspan="3" class="text-right">
+                           <b>{$fsc->show_precio($deducible)}</b>
+                        </td>
+                     </tr>
+                  </table>
+               </div>
+               <div class="text-right">
+                  <!-- {$total=$devengado-$deducible} -->
+                  <h3>
+                     Resultado:
+                     <mark>{$fsc->show_precio($total)}</mark>
+                  </h3>
+               </div>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="compras">
+               <div class="table-responsive">
+                  <table class="table table-hover">
+                     <caption>
+                        Desglose de facturas de compra del {$fsc->s_regiva->fechainicio}
+                        al {$fsc->s_regiva->fechafin}
+                     </caption>
+                     <thead>
+                        <tr>
+                           <th>{#FS_IVA#}</th>
+                           <th>R.E.</th>
+                           <th class="text-right">Base</th>
+                           <th class="text-right">Cálculo</th>
+                        </tr>
+                     </thead>
+                     {loop="$fsc->desglosar_iva_compras()"}
+                     <tr>
+                        <td>{$fsc->show_numero($value['iva'])} %</td>
+                        <td>{$fsc->show_numero($value['recargo'])} %</td>
+                        <td class="text-right">{$fsc->show_precio($value['neto'])}</td>
+                        <td class="text-right">{$fsc->show_precio($value['totaliva']+$value['totalrecargo'])}</td>
+                     </tr>
+                     {else}
+                     <tr class="warning">
+                        <td colspan="4">Sin resultados.</td>
+                     </tr>
+                     {/loop}
+                  </table>
+               </div>
+               <div class="table-responsive">
+                  <!--{$debe=0}-->
+                  <!--{$haber=0}-->
+                  <table class="table table-hover">
+                     {loop="$fsc->facturas_compra_posteriores()"}
+                     {if="$counter==0"}
+                     <caption>
+                        <i class="fa fa-exclamation-triangle fa-3x"></i>&nbsp;
+                        Se han detectado las siguientes facturas de compra creadas
+                        después de la regularización.
+                     </caption>
+                     <thead>
+                        <tr>
+                           <th class="text-left">Código</th>
+                           <th class="text-left">Proveedor</th>
+                           <th class="text-right">Base</th>
+                           <th class="text-right">{#FS_IVA#}</th>
+                           <th class="text-right">R.E.</th>
+                           <th class="text-right">Fecha</th>
+                        </tr>
+                     </thead>
+                     {/if}
+                     <tr class="danger clickableRow" href="{$value->url()}">
+                        <td><a href="{$value->url()}">{$value->codigo}</a></td>
+                        <td>{$value->nombre}</td>
+                        <td class="text-right">{$fsc->show_precio($value->neto, $value->coddivisa)}</td>
+                        <td class="text-right">
+                           <!--{$debe+=$value->totaliva}-->
+                           {$fsc->show_precio($value->totaliva, $value->coddivisa)}
+                        </td>
+                        <td class="text-right">
+                           <!--{$haber+=$value->totalrecargo}-->
+                           {$fsc->show_precio($value->totalrecargo, $value->coddivisa)}
+                        </td>
+                        <td class="text-right">{$value->fecha}</td>
+                     </tr>
+                     {/loop}
+                     {if="$debe!=0 OR $haber!=0"}
+                     <tr class="danger">
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td class="text-right"><b>{$fsc->show_precio($debe)}</b></td>
+                        <td class="text-right"><b>{$fsc->show_precio($haber)}</b></td>
+                        <td></td>
+                     </tr>
+                     {/if}
+                  </table>
+               </div>
+               <div class="table-responsive">
+                  <!--{$debe=0}-->
+                  <!--{$haber=0}-->
+                  <table class="table table-hover">
+                     {loop="$fsc->partidas_problematicas_compras()"}
+                     {if="$counter==0"}
+                     <caption>
+                        <i class="fa fa-exclamation-triangle fa-3x"></i>&nbsp;
+                        Se han detectado los siguientes asientos que afectan a las subcuentas
+                        de {#FS_IVA#} y no están relacionados con facturas de compra.
+                     </caption>
+                     <thead>
+                        <tr>
+                           <th class="text-left">Subcuenta</th>
+                           <th class="text-left">Concepto</th>
+                           <th class="text-right">Base</th>
+                           <th class="text-right">{#FS_IVA#}</th>
+                           <th class="text-right">R.E.</th>
+                           <th class="text-right">Debe</th>
+                           <th class="text-right">Haber</th>
+                        </tr>
+                     </thead>
+                     {/if}
+                     <tr class='{if="$value->idasiento>$fsc->s_regiva->idasiento"}danger{else}warning{/if} clickableRow' href='{$value->url()}'>
+                        <td>{$value->codsubcuenta}</td>
+                        <td><a href="{$value->url()}">{$value->concepto}</a></td>
+                        <td class="text-right">{$fsc->show_precio($value->baseimponible, $value->coddivisa)}</td>
+                        <td class="text-right">{$fsc->show_numero($value->iva)} %</td>
+                        <td class="text-right">{$fsc->show_numero($value->recargo)} %</td>
+                        <td class="text-right">
+                           <!--{$debe+=$value->debe}-->
+                           {$fsc->show_precio($value->debe, $value->coddivisa)}
+                        </td>
+                        <td class="text-right">
+                           <!--{$haber+=$value->haber}-->
+                           {$fsc->show_precio($value->haber, $value->coddivisa)}
+                        </td>
+                     </tr>
+                     {/loop}
+                     {if="$debe!=0 OR $haber!=0"}
+                     <tr class="warning">
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td class="text-right"><b>{$fsc->show_precio($debe)}</b></td>
+                        <td class="text-right"><b>{$fsc->show_precio($haber)}</b></td>
+                     </tr>
+                     {/if}
+                  </table>
+               </div>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="ventas">
+               <div class="table-responsive">
+                  <table class="table table-hover">
+                     <caption>
+                        Desglose de facturas de venta del {$fsc->s_regiva->fechainicio}
+                        al {$fsc->s_regiva->fechafin}
+                     </caption>
+                     <thead>
+                        <tr>
+                           <th>{#FS_IVA#}</th>
+                           <th>R.E.</th>
+                           <th class="text-right">Base</th>
+                           <th class="text-right">Cálculo</th>
+                        </tr>
+                     </thead>
+                     {loop="$fsc->desglosar_iva_ventas()"}
+                     <tr>
+                        <td>{$fsc->show_numero($value['iva'])} %</td>
+                        <td>{$fsc->show_numero($value['recargo'])} %</td>
+                        <td class="text-right">{$fsc->show_precio($value['neto'])}</td>
+                        <td class="text-right">{$fsc->show_precio($value['totaliva']+$value['totalrecargo'])}</td>
+                     </tr>
+                     {else}
+                     <tr class="warning">
+                        <td colspan="4">Sin resultados.</td>
+                     </tr>
+                     {/loop}
+                  </table>
+               </div>
+               <div class="table-responsive">
+                  <!--{$debe=0}-->
+                  <!--{$haber=0}-->
+                  <table class="table table-hover">
+                     {loop="$fsc->facturas_venta_posteriores()"}
+                     {if="$counter==0"}
+                     <caption>
+                        <i class="fa fa-exclamation-triangle fa-3x"></i>&nbsp;
+                        Se han detectado las siguientes facturas de venta creadas
+                        después de la regularización.
+                     </caption>
+                     <thead>
+                        <tr>
+                           <th class="text-left">Código</th>
+                           <th class="text-left">Cliente</th>
+                           <th class="text-right">Base</th>
+                           <th class="text-right">{#FS_IVA#}</th>
+                           <th class="text-right">R.E.</th>
+                           <th class="text-right">Fecha</th>
+                        </tr>
+                     </thead>
+                     {/if}
+                     <tr class="danger clickableRow" href="{$value->url()}">
+                        <td><a href="{$value->url()}">{$value->codigo}</a></td>
+                        <td>{$value->nombrecliente}</td>
+                        <td class="text-right">{$fsc->show_precio($value->neto, $value->coddivisa)}</td>
+                        <td class="text-right">
+                           <!--{$debe+=$value->totaliva}-->
+                           {$fsc->show_precio($value->totaliva, $value->coddivisa)}
+                        </td>
+                        <td class="text-right">
+                           <!--{$haber+=$value->totalrecargo}-->
+                           {$fsc->show_precio($value->totalrecargo, $value->coddivisa)}
+                        </td>
+                        <td class="text-right">{$value->fecha}</td>
+                     </tr>
+                     {/loop}
+                     {if="$debe!=0 OR $haber!=0"}
+                     <tr class="danger">
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td class="text-right"><b>{$fsc->show_precio($debe)}</b></td>
+                        <td class="text-right"><b>{$fsc->show_precio($haber)}</b></td>
+                        <td></td>
+                     </tr>
+                     {/if}
+                  </table>
+               </div>
+               <div class="table-responsive">
+                  <!--{$debe=0}-->
+                  <!--{$haber=0}-->
+                  <table class="table table-hover">
+                     {loop="$fsc->partidas_problematicas_ventas()"}
+                     {if="$counter==0"}
+                     <caption>
+                        <i class="fa fa-exclamation-triangle fa-3x"></i>&nbsp;
+                        Se han detectado los siguientes asientos que afectan a las subcuentas
+                        de {#FS_IVA#} y no están relacionados con facturas de venta.
+                     </caption>
+                     <thead>
+                        <tr>
+                           <th class="text-left">Subcuenta</th>
+                           <th class="text-left">Concepto</th>
+                           <th class="text-right">Base</th>
+                           <th class="text-right">{#FS_IVA#}</th>
+                           <th class="text-right">R.E.</th>
+                           <th class="text-right">Debe</th>
+                           <th class="text-right">Haber</th>
+                        </tr>
+                     </thead>
+                     {/if}
+                     <tr class='{if="$value->idasiento>$fsc->s_regiva->idasiento"}danger{else}warning{/if} clickableRow' href='{$value->url()}'>
+                        <td>{$value->codsubcuenta}</td>
+                        <td><a href="{$value->url()}">{$value->concepto}</a></td>
+                        <td class="text-right">{$fsc->show_precio($value->baseimponible, $value->coddivisa)}</td>
+                        <td class="text-right">{$fsc->show_numero($value->iva)} %</td>
+                        <td class="text-right">{$fsc->show_numero($value->recargo)} %</td>
+                        <td class="text-right">
+                           <!--{$debe+=$value->debe}-->
+                           {$fsc->show_precio($value->debe, $value->coddivisa)}
+                        </td>
+                        <td class="text-right">
+                           <!--{$haber+=$value->haber}-->
+                           {$fsc->show_precio($value->haber, $value->coddivisa)}
+                        </td>
+                     </tr>
+                     {/loop}
+                     {if="$debe!=0 OR $haber!=0"}
+                     <tr class="warning">
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td class="text-right"><b>{$fsc->show_precio($debe)}</b></td>
+                        <td class="text-right"><b>{$fsc->show_precio($haber)}</b></td>
+                     </tr>
+                     {/if}
+                  </table>
+               </div>
+            </div>
+         </div>
+      </div>
+      <div class="col-sm-4 hidden-print">
+         <div class="table-responsive">
+            <table class="table table-hover">
+               <caption class="text-center">Asiento generado para esta regularización</caption>
+               <thead>
+                  <tr>
+                     <th class="text-left">Subcuenta</th>
+                     <th class="text-right">Debe</th>
+                     <th class="text-right">Haber</th>
+                  </tr>
+               </thead>
+               {loop="$fsc->s_regiva->get_partidas()"}
+               <tr class="clickableRow" href="{$value->url()}">
+                  <td><a href="{$value->url()}">{$value->codsubcuenta}</a></td>
+                  <td class="text-right">{$fsc->show_precio($value->debe, $value->coddivisa)}</td>
+                  <td class="text-right">{$fsc->show_precio($value->haber, $value->coddivisa)}</td>
+               </tr>
+               {else}
+               <tr class="warning">
+                  <td colspan="3">Sin datos.</td>
+               </tr>
+               {/loop}
+            </table>
+         </div>
+         <p class='help-block'>
+            Este asiento ha sido generado atendiendo a los saldos de las subcuentas
+            implicadas para el día {$fsc->s_regiva->fechafin}
+         </p>
+      </div>
+   </div>
+</div>
+{else}
+<script type="text/javascript">
+   function completar_regiva()
+   {
+      document.f_nueva_regiva.proceso.value = 'comprobar';
+      $.ajax({
+         type: 'POST',
+         url: '{$fsc->url()}',
+         dataType: 'html',
+         data: $("form[name=f_nueva_regiva]").serialize(),
+         success: function(datos) {
+            $("#div_completar_regiva").hide();
+            $("#lineas_regiva").html(datos);
+         }
+      });
+   }
+   function guardar_regiva()
+   {
+      document.f_nueva_regiva.proceso.value = 'guardar';
+      document.f_nueva_regiva.submit();
+   }
+   $(document).ready(function() {
+      $("#b_nueva_regiva").click(function(event) {
+         event.preventDefault();
+         $("#lineas_regiva").html('');
+         $("#modal_nueva_regiva").modal('show');
+      });
+   });
+</script>
+
+<div class="container-fluid">
+   <div class="row">
+      <div class="col-sm-12">
+         <div class="page-header">
+            <h1>
+               <span class="glyphicon glyphicon-book"></span>
+               Modelo 303
+               <a class="btn btn-xs btn-default" href="{$fsc->url()}" title="Recargar la página">
+                  <span class="glyphicon glyphicon-refresh"></span>
+               </a>
+               <span class="btn-group">
+                  <a id="b_nueva_regiva" class="btn btn-xs btn-success" href="#">
+                     <span class="glyphicon glyphicon-plus"></span> &nbsp; Nuevo
+                  </a>
+                  {loop="$fsc->extensions"}
+                     {if="$value->type=='button'"}
+                     <a href="index.php?page={$value->from}{$value->params}" class="btn btn-xs btn-default">{$value->text}</a>
+                     {/if}
+                  {/loop}
+               </span>
+            </h1>
+            <p class="help-block">
+               Declaración trimestral de {#FS_IVA#} a la hacienda española.
+            </p>
+         </div>
+      </div>
+   </div>
+   <div class="row">
+      <div class="col-sm-12">
+         <div class="table-responsive">
+            <table class="table table-hover">
+               <thead>
+                  <tr>
+                     <th class="text-left">Ejercicio</th>
+                     <th class="text-left">Periodo</th>
+                     <th class="text-left">Fecha de inicio</th>
+                     <th class="text-left">Fecha de fin</th>
+                     <th class="text-right">Fecha del asiento</th>
+                  </tr>
+               </thead>
+               {loop="$fsc->regiva->all()"}
+               <tr class="clickableRow" href="{$value->url()}">
+                  <td>{$value->codejercicio}</td>
+                  <td><a href="{$value->url()}">{$value->periodo}</a></td>
+                  <td>{$value->fechainicio}</td>
+                  <td>{$value->fechafin}</td>
+                  <td class="text-right">{$value->fechaasiento}</td>
+               </tr>
+               {else}
+               <tr class="warning">
+                  <td colspan="5">Sin resultados. Pulsa el botón <b>Nueva</b> para hacer una regularización de {#FS_IVA#}.</td>
+               </tr>
+               {/loop}
+            </table>
+         </div>
+      </div>
+   </div>
+</div>
+
+<form class="form-horizontal" role="form" name="f_nueva_regiva" action="{$fsc->url()}" method="post">
+   <input type="hidden" name="proceso" value=""/>
+   <div class="modal fade" id="modal_nueva_regiva">
+      <div class="modal-dialog">
+         <div class="modal-content">
+            <div class="modal-header">
+               <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+               <h4 class="modal-title">Nuevo modelo 303</h4>
+            </div>
+            <div class="modal-body">
+               <div class="form-group">
+                  <label for="periodo" class="col-sm-2 control-label">Período</label>
+                  <div class="col-sm-10">
+                      <select name="periodo" class="form-control">
+                         {if="$fsc->periodo=='T1'"}<option selected="">T1</option>{else}<option>T1</option>{/if}
+                         {if="$fsc->periodo=='T2'"}<option selected="">T2</option>{else}<option>T2</option>{/if}
+                         {if="$fsc->periodo=='T3'"}<option selected="">T3</option>{else}<option>T3</option>{/if}
+                         {if="$fsc->periodo=='T4'"}<option selected="">T4</option>{else}<option>T4</option>{/if}
+                      </select>
+                   </div>
+               </div>
+               <div class="form-group">
+                  <label for="desde" class="col-sm-2 control-label">Desde</label>
+                  <div class="col-sm-10">
+                     <input class="form-control datepicker" type="text" name="desde" value="{$fsc->fecha_desde}"/>
+                  </div>
+               </div>
+               <div class="form-group">
+                  <label for="hasta" class="col-sm-2 control-label">Hasta</label>
+                  <div class="col-sm-10">
+                     <input class="form-control datepicker" type="text" name="hasta" value="{$fsc->fecha_hasta}"/>
+                  </div>
+               </div>
+            </div>
+            <div id="div_completar_regiva" class="modal-footer">
+               <button class="btn btn-sm btn-default" type="button" onclick="completar_regiva()">
+                   <span class="glyphicon glyphicon-play"></span>&nbsp; Completar
+                </button>
+            </div>
+            <div id="lineas_regiva"></div>
+         </div>
+      </div>
+   </div>
+</form>
+{/if}
+
+{include="footer"}

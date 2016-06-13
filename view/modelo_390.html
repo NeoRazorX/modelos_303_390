@@ -1,0 +1,126 @@
+{include="header"}
+
+<div class="container-fluid">
+   <div class="row">
+      <div class="col-sm-12">
+         <div class="page-header">
+            <h1>
+               <span class="glyphicon glyphicon-book"></span>
+               Modelo 390
+               <a class="btn btn-xs btn-default hidden-print" href="{$fsc->url()}" title="Recargar la página">
+                  <span class="glyphicon glyphicon-refresh"></span>
+               </a>
+               <span class="btn-group hidden-print">
+                  {loop="$fsc->extensions"}
+                     {if="$value->type=='button'"}
+                     <a href="index.php?page={$value->from}{$value->params}" class="btn btn-xs btn-default">{$value->text}</a>
+                     {/if}
+                  {/loop}
+               </span>
+            </h1>
+            <p class="help-block">
+               Modelo 390 de la hacienda española.
+            </p>
+         </div>
+      </div>
+   </div>
+   <form name="f_390" action="{$fsc->url()}" method="post" class="form">
+      <div class="row hidden-print">
+         <div class="col-sm-3">
+            <div class="form-group">
+               <div class="input-group">
+                  <span class="input-group-addon">
+                     <i class="fa fa-calendar" aria-hidden="true"></i>
+                     Ejercicio
+                  </span>
+                  <select class="form-control" name="codejercicio" onchange="document.f_390.submit()">
+                  {loop="$fsc->ejercicio->all()"}
+                     {if="$fsc->sejercicio->codejercicio==$value->codejercicio"}
+                     <option value="{$value->codejercicio}" selected="">{$value->nombre}</option>
+                     {else}
+                     <option value="{$value->codejercicio}">{$value->nombre}</option>
+                     {/if}
+                  {/loop}
+                  </select>
+               </div>
+            </div>
+         </div>
+         <div class="col-sm-9 text-right">
+            <a class="btn btn-sm btn-default" onclick="window.print();">
+               <span class="glyphicon glyphicon-print" aria-hidden="true"></span>
+               <span class="hidden-xs">&nbsp; Imprimir</span>
+            </a>
+         </div>
+      </div>
+   </form>
+   <div class="row">
+      <div class="col-sm-12">
+         <!-- {$devengado=0} -->
+         <!-- {$deducible=0} -->
+         <!-- {$total=0} -->
+         <h3>{#FS_IVA#} devengado</h3>
+         <div class="table-responsive">
+            <table class="table table-hover">
+               <thead>
+                  <tr>
+                     <th class="text-right">Base imponible</th>
+                     <th class="text-right">Tipo</th>
+                     <th class="text-right">Cuota</th>
+                  </tr>
+               </thead>
+               {loop="$fsc->desglosar_iva_ventas()"}
+               <tr>
+                  <td class="text-right">{$fsc->show_precio($value['neto'])}</td>
+                  <td class="text-right">{$fsc->show_numero($value['iva'])} %</td>
+                  <td class="text-right">
+                     <!-- {$devengado=$devengado+$value['totaliva']+$value['totalrecargo']} -->
+                     {$fsc->show_precio($value['totaliva']+$value['totalrecargo'])}
+                  </td>
+               </tr>
+               {/loop}
+               <tr class="info">
+                  <td colspan="3" class="text-right">
+                     <b>{$fsc->show_precio($devengado)}</b>
+                  </td>
+               </tr>
+            </table>
+         </div>
+         <h3>{#FS_IVA#} deducible</h3>
+         <div class="table-responsive">
+            <table class="table table-hover">
+               <thead>
+                  <tr>
+                     <th class="text-right">Base imponible</th>
+                     <th class="text-right">Tipo</th>
+                     <th class="text-right">Cuota</th>
+                  </tr>
+               </thead>
+               {loop="$fsc->desglosar_iva_compras()"}
+               <tr>
+                  <td class="text-right">{$fsc->show_precio($value['neto'])}</td>
+                  <td class="text-right">{$fsc->show_numero($value['iva'])} %</td>
+                  <td class="text-right">
+                     <!-- {$deducible=$deducible+$value['totaliva']+$value['totalrecargo']} -->
+                     {$fsc->show_precio($value['totaliva']+$value['totalrecargo'])}
+                  </td>
+               </tr>
+               {/loop}
+               <tr class="info">
+                  <td colspan="3" class="text-right">
+                     <b>{$fsc->show_precio($deducible)}</b>
+                  </td>
+               </tr>
+            </table>
+         </div>
+         <div class="text-right">
+            <!-- {$total=$devengado-$deducible} -->
+            <h3>
+               Resultado:
+               <mark>{$fsc->show_precio($total)}</mark>
+            </h3>
+         </div>
+      </div>
+   </div>
+</div>
+
+{include="footer"}

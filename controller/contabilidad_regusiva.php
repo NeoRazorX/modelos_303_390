@@ -33,6 +33,7 @@ class contabilidad_regusiva extends fs_controller
    public $factura_pro;
    public $fecha_desde;
    public $fecha_hasta;
+   public $full_test;
    public $periodo;
    public $regiva;
    public $s_regiva;
@@ -53,6 +54,7 @@ class contabilidad_regusiva extends fs_controller
       $this->regiva = new regularizacion_iva();
       $this->factura_cli = new factura_cliente();
       $this->factura_pro = new factura_proveedor();
+      $this->full_test = isset($_REQUEST['full_test']);
       
       switch( Date('n') )
       {
@@ -107,7 +109,19 @@ class contabilidad_regusiva extends fs_controller
       {
          if( $this->factura_cli->huecos() )
          {
-            $this->new_error_msg('Tienes huecos en la facturación y por tanto no puedes regularizar el iva.');
+            $this->template = FALSE;
+            echo '<div class="alert alert-danger">'
+            . 'Tienes <a href="index.php?page=ventas_facturas">huecos en la facturación</a>'
+            . ' y por tanto no puedes regularizar el IVA.'
+            . '</div>';
+         }
+         else if( $this->facturas_sin_asiento() )
+         {
+            $this->template = FALSE;
+            echo '<div class="alert alert-danger">'
+            . 'Tienes facturas sin asientos contables y por tanto no puedes regularizar el IVA. '
+            . 'Puedes generar los asientos usando el <b>plugin megafacturador</b>.'
+            . '</div>';
          }
          else if($_POST['proceso'] == 'guardar')
          {
@@ -134,6 +148,39 @@ class contabilidad_regusiva extends fs_controller
                $this->new_error_msg('Regularización no encontrada.');
          }
       }
+   }
+   
+   private function facturas_sin_asiento()
+   {
+      $hay = FALSE;
+      
+      /// facturas de compra
+      $sql = "SELECT COUNT(*) as num FROM facturasprov WHERE idasiento IS NULL"
+              . " AND fecha >= ".$this->empresa->var2str($this->fecha_desde)
+              . " AND fecha <= ".$this->empresa->var2str($this->fecha_hasta).";";
+      $data = $this->db->select($sql);
+      if($data)
+      {
+         if( intval($data[0]['num']) > 0 )
+         {
+            $hay = TRUE;
+         }
+      }
+      
+      /// facturas de venta
+      $sql = "SELECT COUNT(*) as num FROM facturascli WHERE idasiento IS NULL"
+              . " AND fecha >= ".$this->empresa->var2str($this->fecha_desde)
+              . " AND fecha <= ".$this->empresa->var2str($this->fecha_hasta).";";
+      $data = $this->db->select($sql);
+      if($data)
+      {
+         if( intval($data[0]['num']) > 0 )
+         {
+            $hay = TRUE;
+         }
+      }
+      
+      return $hay;
    }
    
    private function completar_regiva()
@@ -502,6 +549,7 @@ class contabilidad_regusiva extends fs_controller
       
       foreach($subcuenta->all_from_cuentaesp('IVASOP', $eje0->codejercicio) as $scta_ivasop)
       {
+         /// optimizar
          $sql = "select * from co_partidas where codsubcuenta = ".$eje0->var2str($scta_ivasop->codsubcuenta)
                  . " and idasiento in (select idasiento from co_asientos"
                  . " where fecha >= ".$this->empresa->var2str($this->s_regiva->fechainicio)

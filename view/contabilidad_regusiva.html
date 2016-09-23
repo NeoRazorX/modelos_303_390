@@ -1,6 +1,19 @@
 {include="header"}
 
 {if="$fsc->s_regiva"}
+<script type="text/javascript">
+   $(document).ready(function() {
+      if(window.location.hash.substring(1) == 'compras')
+      {
+         $('#ul_tabs a[href="#compras"]').tab('show');
+      }
+      else if(window.location.hash.substring(1) == 'ventas')
+      {
+         $('#ul_tabs a[href="#ventas"]').tab('show');
+      }
+   });
+</script>
+
 <div class="container-fluid">
    <div class="row hidden-print">
       <div class="col-sm-6">
@@ -73,7 +86,7 @@
    </div>
    <div class="row">
       <div class="col-sm-8">
-         <ul class="nav nav-tabs hidden-print" role="tablist">
+         <ul id="ul_tabs" class="nav nav-tabs hidden-print" role="tablist">
             <li role="presentation" class="active">
                <a href="#resumen" aria-controls="resumen" role="tab" data-toggle="tab">
                   <i class="fa fa-print"></i>&nbsp; Resumen
@@ -186,6 +199,7 @@
                      {/loop}
                   </table>
                </div>
+               {if="$fsc->full_test"}
                <div class="table-responsive">
                   <!--{$debe=0}-->
                   <!--{$haber=0}-->
@@ -287,6 +301,11 @@
                      {/if}
                   </table>
                </div>
+               {else}
+               <a href="{$fsc->s_regiva->url()}&full_test=TRUE#compras" class="btn btn-sm btn-warning">
+                  <span class="glyphicon glyphicon-search" aria-hidden="true"></span>&nbsp; Comprobación completa
+               </a>
+               {/if}
             </div>
             <div role="tabpanel" class="tab-pane" id="ventas">
                <div class="table-responsive">
@@ -317,6 +336,7 @@
                      {/loop}
                   </table>
                </div>
+               {if="$fsc->full_test"}
                <div class="table-responsive">
                   <!--{$debe=0}-->
                   <!--{$haber=0}-->
@@ -418,6 +438,11 @@
                      {/if}
                   </table>
                </div>
+               {else}
+               <a href="{$fsc->s_regiva->url()}&full_test=TRUE#ventas" class="btn btn-sm btn-warning">
+                  <span class="glyphicon glyphicon-search" aria-hidden="true"></span>&nbsp; Comprobación completa
+               </a>
+               {/if}
             </div>
          </div>
       </div>

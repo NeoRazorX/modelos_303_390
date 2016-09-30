@@ -96,6 +96,16 @@ class contabilidad_regusiva extends fs_controller
             break;
       }
       
+      if( isset($_POST['desde']) )
+      {
+         $this->fecha_desde = $_POST['desde'];
+      }
+      
+      if( isset($_POST['hasta']) )
+      {
+         $this->fecha_hasta = $_POST['hasta'];
+      }
+      
       $this->s_regiva = FALSE;
       if( isset($_REQUEST['id']) )
       {
@@ -193,7 +203,7 @@ class contabilidad_regusiva extends fs_controller
       $partida = new partida();
       $subcuenta = new subcuenta();
       
-      $eje0 = $ejercicio->get_by_fecha($_POST['desde'], TRUE);
+      $eje0 = $ejercicio->get_by_fecha($this->fecha_desde, TRUE);
       if($eje0)
       {
          $continuar = TRUE;
@@ -202,7 +212,7 @@ class contabilidad_regusiva extends fs_controller
          /// obtenemos el IVA soportado
          foreach($subcuenta->all_from_cuentaesp('IVASOP', $eje0->codejercicio) as $scta_ivasop)
          {
-            $tot_sop = $partida->totales_from_subcuenta_fechas($scta_ivasop->idsubcuenta, $_POST['desde'], $_POST['hasta']);
+            $tot_sop = $partida->totales_from_subcuenta_fechas($scta_ivasop->idsubcuenta, $this->fecha_desde, $this->fecha_hasta);
             if($tot_sop['saldo'])
             {
                /// invertimos el debe y el haber
@@ -218,7 +228,7 @@ class contabilidad_regusiva extends fs_controller
          /// obtenemos el IVA repercutido
          foreach($subcuenta->all_from_cuentaesp('IVAREP', $eje0->codejercicio) as $scta_ivarep)
          {
-            $tot_rep = $partida->totales_from_subcuenta_fechas($scta_ivarep->idsubcuenta, $_POST['desde'], $_POST['hasta']);
+            $tot_rep = $partida->totales_from_subcuenta_fechas($scta_ivarep->idsubcuenta, $this->fecha_desde, $this->fecha_hasta);
             if($tot_rep['saldo'])
             {
                /// invertimos el debe y el haber
@@ -245,7 +255,10 @@ class contabilidad_regusiva extends fs_controller
                   );
                }
                else
-                  $this->new_error_msg('No se encuentra la subcuenta acreedora por IVA.');
+               {
+                  $this->template = FALSE;
+                  echo '<div class="alert alert-danger">No se encuentra la subcuenta acreedora por IVA.</div>';
+               }
             }
             else if($saldo < 0)
             {
@@ -259,14 +272,23 @@ class contabilidad_regusiva extends fs_controller
                   );
                }
                else
-                  $this->new_error_msg('No se encuentra la subcuenta deudora por IVA.');
+               {
+                  $this->template = FALSE;
+                  echo '<div class="alert alert-danger">No se encuentra la subcuenta deudora por IVA.</div>';
+               }
             }
          }
          else
-            $this->new_error_msg('Error al leer las subcuentas.');
+         {
+            $this->template = FALSE;
+            echo '<div class="alert alert-danger">Error al leer las subcuentas.</div>';
+         }
       }
       else
-         $this->new_error_msg('El ejercicio está cerrado.');
+      {
+         $this->template = FALSE;
+         echo '<div class="alert alert-danger">El ejercicio está cerrado.</div>';
+      }
    }
    
    private function guardar_regiva()
@@ -275,7 +297,7 @@ class contabilidad_regusiva extends fs_controller
       $ejercicio = new ejercicio();
       $subcuenta = new subcuenta();
       
-      $eje0 = $ejercicio->get_by_fecha($_POST['desde'], TRUE);
+      $eje0 = $ejercicio->get_by_fecha($this->fecha_desde, TRUE);
       if($eje0)
       {
          $continuar = TRUE;
@@ -284,7 +306,7 @@ class contabilidad_regusiva extends fs_controller
          /// guardamos el asiento
          $asiento->codejercicio = $eje0->codejercicio;
          $asiento->concepto = 'REGULARIZACIÓN IVA '.$_POST['periodo'];
-         $asiento->fecha = $_POST['hasta'];
+         $asiento->fecha = $this->fecha_hasta;
          $asiento->editable = FALSE;
          if( $asiento->save() )
          {
@@ -299,7 +321,7 @@ class contabilidad_regusiva extends fs_controller
                $par0->codsubcuenta = $scta_ivasop->codsubcuenta;
                $par0->idsubcuenta = $scta_ivasop->idsubcuenta;
                
-               $tot_sop = $par0->totales_from_subcuenta_fechas($scta_ivasop->idsubcuenta, $_POST['desde'], $_POST['hasta']);
+               $tot_sop = $par0->totales_from_subcuenta_fechas($scta_ivasop->idsubcuenta, $this->fecha_desde, $this->fecha_hasta);
                if($tot_sop['saldo'])
                {
                   /// invertimos el debe y el haber
@@ -326,7 +348,7 @@ class contabilidad_regusiva extends fs_controller
                $par1->codsubcuenta = $scta_ivarep->codsubcuenta;
                $par1->idsubcuenta = $scta_ivarep->idsubcuenta;
                
-               $tot_rep = $par1->totales_from_subcuenta_fechas($scta_ivarep->idsubcuenta, $_POST['desde'], $_POST['hasta']);
+               $tot_rep = $par1->totales_from_subcuenta_fechas($scta_ivarep->idsubcuenta, $this->fecha_desde, $this->fecha_hasta);
                if($tot_rep['saldo'])
                {
                   /// invertimos el debe y el haber
@@ -405,8 +427,8 @@ class contabilidad_regusiva extends fs_controller
             $this->regiva = new regularizacion_iva();
             $this->regiva->codejercicio = $eje0->codejercicio;
             $this->regiva->fechaasiento = $asiento->fecha;
-            $this->regiva->fechafin = $_POST['hasta'];
-            $this->regiva->fechainicio = $_POST['desde'];
+            $this->regiva->fechafin = $this->fecha_hasta;
+            $this->regiva->fechainicio = $this->fecha_desde;
             $this->regiva->idasiento = $asiento->idasiento;
             $this->regiva->periodo = $_POST['periodo'];
             
